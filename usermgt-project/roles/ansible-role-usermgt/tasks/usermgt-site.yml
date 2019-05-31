@@ -1,0 +1,11 @@
+---
+# This playbook setup user and ssh key
+
+- hosts: target-servers
+  remote_user: root
+  become: true
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - ansible-role-usermgt
