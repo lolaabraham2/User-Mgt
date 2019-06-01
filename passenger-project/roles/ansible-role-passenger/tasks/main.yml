@@ -1,0 +1,68 @@
+---
+
+- hosts: all
+  tasks:
+
+  - name: Ensure the PGP key is installed
+    apt_key: >
+      state=present
+      id=AC40B2F7
+      url="http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x561F9B9CAC40B2F7"
+
+  - name: Ensure https support for apt is installed
+    apt: >
+      state=present
+      pkg=apt-transport-https
+
+  - name: Ensure the passenger apt repository is added
+    apt_repository: >
+      state=present
+      repo='deb https://oss-binaries.phusionpassenger.com/apt/passenger raring main'
+
+  - name: Phusion repo
+    apt_repository: >
+      repo='deb https://oss-binaries.phusionpassenger.com/apt/passenger {{ansible_distribution_release}} main'
+      state=present
+      update_cache=yes
+
+  - name: Configure passenger virtual host.
+    template:
+      src=passenger.j2
+      dest=/etc/nginx/sites-available/passenger
+    notify: restart nginx
+
+  - name: Ensure nginx is installed
+    apt: >
+      state=present
+      pkg=nginx-full
+
+  - name: Ensure passenger is installed
+    apt: >
+      state=present
+      pkg=passenger
+      update_cache=yes
+
+  - name: Ensure the nginx configuration file is set
+    copy: >
+      src=app.nginx.conf
+      dest=/etc/nginx/nginx.conf
+
+  - name: Ensure nginx is running
+    service: >
+      name=nginx
+      state=started
+  - name: Ensure passenger virtual host is enabled.
+    file:
+      src=/etc/nginx/sites-available/passenger
+      dest=/etc/nginx/sites-enabled/passenger
+      state=link
+  - name: copy the nginx config file and restart nginx
+    copy:
+      src=app.nginx.conf
+      dest=/etc/nginx/sites-available/static_site.cfg
+ 
+  - name: Ensure default virtual host is removed.
+    file:
+      path=/etc/nginx/sites-enabled/default
+      state=absent
+    notify: restart nginx

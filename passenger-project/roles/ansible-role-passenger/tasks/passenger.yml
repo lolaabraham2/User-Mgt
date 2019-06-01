@@ -1,0 +1,16 @@
+---
+# This playbook setup user and ssh key
+
+- hosts: target-servers
+  remote_user: root
+  become: true
+  become_method: sudo
+  become_user: root
+
+  roles:
+    - ansible-role-passenger
+
+  vars:
+    passenger_server_name=local.example.com
+    passenger_app_env=development
+    passenger_app_root=/opt/demo/public
